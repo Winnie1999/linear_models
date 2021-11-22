@@ -82,3 +82,9 @@ broom::tidy(fit) %>%
   knitr::kable(digits = 3)
 ```
 
+## Be in control of factors.
+
+
+
+
+
