@@ -7,8 +7,8 @@ output: github_document
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(modelr)
 library(p8105.datasets)
-
 set.seed(1)
 
 knitr::opts_chunk$set(
@@ -29,22 +29,84 @@ scale_fill_discrete = scale_fill_viridis_d
 
 ```
 
-## R Markdown
+## Simulate data
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+n_samp = 250
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+sim_df_const = 
+  tibble(
+    x = rnorm(n_samp, 1, 1),
+    error = rnorm(n_samp, 0, 1),
+    y = 2 + 3 * x + error
+  )
 
-```{r cars}
-summary(cars)
+sim_df_nonconst = sim_df_const %>% 
+  mutate(
+  error = error * .75 * x,
+  y = 2 + 3 * x + error
+)
 ```
 
-## Including Plots
+plot the datasets
 
-You can also embed plots, for example:
+```{r}
+sim_df = 
+  bind_rows(const = sim_df_const, nonconst = sim_df_nonconst, .id = "data_source") 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+sim_df %>% 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm") +
+  facet_grid(~data_source) 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+sim_df_const %>% 
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+# same amount of uncertainty on the slop and intercept
+
+sim_df_nonconst %>% 
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+## more uncertainty on the slop and less uncertainty on the intercept
+```
+
+```{r}
+lm(y ~ x, data = sim_df_const) %>% broom::tidy()
+lm(y ~ x, data = sim_df_nonconst) %>% broom::tidy()
+```
+
+## Draw one bootstrap sample
+
+```{r}
+boot_sample = function(df) {
+  # same size because confidence interval depends on the sample size
+  sample_frac(df, replace = TRUE) %>% 
+    arrange(x)
+  
+  
+}
+```
+
+Check if this works
+
+```{r}
+boot_sample(sim_df_nonconst) %>% 
+  ggplot(aes(x = x, y = y)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm") +
+  ylim(-5, 16)
+  
+```
+
+```{r}
+boot_sample(sim_df_nonconst) %>% 
+  lm(y ~ x, data = .) %>% 
+  broom::tidy()
+  
+```
