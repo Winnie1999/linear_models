@@ -108,5 +108,15 @@ boot_sample(sim_df_nonconst) %>%
 boot_sample(sim_df_nonconst) %>% 
   lm(y ~ x, data = .) %>% 
   broom::tidy()
-  
 ```
+
+## Many samples and analysis
+
+```{r}
+boot_straps = 
+  tibble(
+    strap_number = 1:1000,
+    strap_sample = rerun(1000, boot_sample(sim_df_nonconst))
+  )
+```
+
