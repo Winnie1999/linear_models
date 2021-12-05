@@ -100,4 +100,32 @@ nyc_airbnb %>%
   geom_point()
 ```
 
+```{r}
+fit = lm(price ~ stars + borough, data = nyc_airbnb)
+broom::tidy(fit)
+broom::glance(fit)
+```
+
+## Diagnostics
+
+```{r}
+nyc_airbnb %>% 
+  modelr::add_residuals(fit) %>% 
+  ggplot(aes(x = borough, y = resid)) +
+  geom_violin() +
+  ylim(-500, 1500)
+
+nyc_airbnb %>% 
+  modelr::add_residuals(fit) %>% 
+  ggplot(aes(x = stars, y = resid)) +
+  geom_point() +
+  facet_wrap(. ~borough)
+```
+
+## hypothesis test
+
+```{r}
+fit %>% 
+  broom::tidy()
+```
 
