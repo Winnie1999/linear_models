@@ -124,8 +124,20 @@ nyc_airbnb %>%
 
 ## hypothesis test
 
+This does t-test by default
+
 ```{r}
 fit %>% 
+  broom::tidy()
+```
+
+What about the significance of `borough`.
+
+```{r}
+fit_null = lm(price ~ stars, data = nyc_airbnb)
+fit_alt = lm(price ~ stars + borough, data = nyc_airbnb)
+
+anova(fit_null, fit_alt) %>% 
   broom::tidy()
 ```
 
